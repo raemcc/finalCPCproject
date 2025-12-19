@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import * as TONE from 'tone';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TTFLoader } from 'three/examples/jsm/loaders/TTFLoader.js';
+import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+
 import './styles.css';
 
 let scene, camera, renderer, orbit;
@@ -72,6 +76,10 @@ function init() {
 
   createMainFloor(); 
   createSecondFloor(); 
+
+  addText('To Do',  { x: 0,  y: -1.5, z: -8 });
+  addText('Done',   { x: 20, y: 0, z: -8 });
+
 
   loadShapesFromStorage();
 
@@ -173,6 +181,46 @@ function createSecondFloor() {
   secondFloor.userData.ground = true;
 
   scene.add(secondFloor);
+}
+
+function addText(message, position = {x: 0, y: 0, z: 0}) {
+  const loader = new TTFLoader();
+
+  loader.load('/fonts/JetBrainsMono-Medium.ttf', (json) => {
+    const font = new Font(json);
+
+    const textGeo = new TextGeometry(message, {
+      font,
+      size: 0.8,
+      depth: 0.2,
+      curveSegments: 4,
+      bevelEnabled: true,
+      bevelThickness: 0.02,
+      bevelSize: 0.01
+    });
+    textGeo.computeBoundingBox();
+    const centerOffset = 
+    -0.5 *  (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+
+    const material = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+      flatShading: true
+    });
+
+    const textMesh = new THREE.Mesh(textGeo, material);
+
+    textMesh.position.set(
+      position.x + centerOffset,
+      position.y,
+      position.z
+    );
+
+    textMesh.castShadow = true;
+    textMesh.receiveShadow = false;
+    textMesh.userData.draggable = false;
+
+    scene.add(textMesh);
+  });
 }
 
 function createShape({
